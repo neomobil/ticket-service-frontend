@@ -6,7 +6,7 @@ import { getAuth, GoogleAuthProvider, onAuthStateChanged } from 'firebase/auth';
 import * as firebaseui from 'firebaseui';
 import 'firebaseui/dist/firebaseui.css';
 import 'firebase/compat/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, setDoc, doc } from 'firebase/firestore';
 import { getDatabase, ref, onValue } from 'firebase/database';
 import { User } from 'src/models/user';
 
@@ -43,7 +43,7 @@ export default boot(({ app }) => {
   const translationsStore = useTranslationsStore();
   onAuthStateChanged(
     fbAuth,
-    (user) => {
+    async (user) => {
       if (user) {
         const userData: User = {
           displayName: user.displayName,
@@ -54,7 +54,17 @@ export default boot(({ app }) => {
           providerId: user.providerId,
           uid: user.uid,
         };
-        userStore.user = userData;
+        userStore.user = userData; // TODO Store/ update user data after its persisted in firestore
+        try {
+          const docRef = await setDoc(
+            doc(firestore, 'users', user.uid),
+            userData,
+            { merge: true }
+          );
+          console.log('User added/updated with ID: ', user.uid);
+        } catch (e) {
+          console.error('Error adding document: ', e);
+        }
       } else {
         userStore.$reset();
         //store.commit('BaseStoreModule/setUser', baseUserState)
