@@ -1,11 +1,13 @@
+import { useTranslationsStore } from './../stores/translations-store';
 import { useUserStore } from '../stores/user-store';
-import { boot } from 'quasar/wrappers'
+import { boot } from 'quasar/wrappers';
 import firebase from 'firebase/compat/app';
 import { getAuth, GoogleAuthProvider, onAuthStateChanged } from 'firebase/auth';
-import * as firebaseui from 'firebaseui'
-import 'firebaseui/dist/firebaseui.css'
+import * as firebaseui from 'firebaseui';
+import 'firebaseui/dist/firebaseui.css';
 import 'firebase/compat/auth';
 import { getFirestore } from 'firebase/firestore';
+import { getDatabase, ref, onValue } from 'firebase/database';
 import { User } from 'src/models/user';
 
 const firebaseConfig = {
@@ -17,7 +19,7 @@ const firebaseConfig = {
   messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.FIREBASE_APP_ID,
 };
-const fbApp = firebase.initializeApp(firebaseConfig)
+const fbApp = firebase.initializeApp(firebaseConfig);
 const fbAuth = getAuth();
 const fbUiConfig = {
   signInSuccessUrl: '/#/',
@@ -25,39 +27,48 @@ const fbUiConfig = {
     GoogleAuthProvider.PROVIDER_ID,
     {
       provider: firebase.auth.EmailAuthProvider.PROVIDER_ID,
-      requireDisplayName: false
+      requireDisplayName: false,
     },
     firebase.auth.FacebookAuthProvider.PROVIDER_ID,
     firebase.auth.TwitterAuthProvider.PROVIDER_ID,
-    firebase.auth.GithubAuthProvider.PROVIDER_ID
-  ]
+    firebase.auth.GithubAuthProvider.PROVIDER_ID,
+  ],
 };
 const fbUi = new firebaseui.auth.AuthUI(fbAuth);
-const fbDb = getFirestore();
+const fbRealtimeDb = getDatabase();
+const firestore = getFirestore();
 
-export default boot(({app}) => {
-  const userStore = useUserStore()
-  onAuthStateChanged(fbAuth, (user) => {
-    if (user) {
-      const userData: User = {
-        displayName: user.displayName,
-        email: user.email,
-        loggedIn: true,
-        phoneNumber: user.phoneNumber,
-        photoURL: user.photoURL,
-        providerId: user.providerId,
-        uid: user.uid,
+export default boot(({ app }) => {
+  const userStore = useUserStore();
+  const translationsStore = useTranslationsStore();
+  onAuthStateChanged(
+    fbAuth,
+    (user) => {
+      if (user) {
+        const userData: User = {
+          displayName: user.displayName,
+          email: user.email,
+          loggedIn: true,
+          phoneNumber: user.phoneNumber,
+          photoURL: user.photoURL,
+          providerId: user.providerId,
+          uid: user.uid,
+        };
+        userStore.user = userData;
+      } else {
+        userStore.$reset();
+        //store.commit('BaseStoreModule/setUser', baseUserState)
       }
-      userStore.user = userData
-    } else {
-      userStore.$reset()
-      //store.commit('BaseStoreModule/setUser', baseUserState)
+    },
+    function (error) {
+      console.log(error);
     }
-  }, function(error) {
-    console.log(error);
+  );
+  const translations = ref(fbRealtimeDb, 'translations');
+  onValue(translations, (snapshot) => {
+    const data = snapshot.val();
+    translationsStore.translations = data;
   });
-app.config.globalProperties.$firebase = fbApp;
-})
+});
 
-export {fbApp, fbUi, fbUiConfig, fbAuth, fbDb};
-
+export { fbApp, fbUi, fbUiConfig, fbAuth, fbRealtimeDb, firestore };
