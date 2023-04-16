@@ -1,2 +1,9 @@
-# Quasar-Firebase Boilerplate App
-Boilerplate App to save your/my time when creating VueJS application with Firebase, Firebase-ui features, like Sign-in, Sign-up users, using Firestore and/or Realtime Database
+# Frontend for Ticket Service
+
+Used frameworks /technologies
+- [VueJS](https://vuejs.org/)
+  - [Pinia](https://pinia.vuejs.org)
+  - [Vite](https://vitejs.dev/)
+- [Quasar Framework](https://quasar.dev)
+- [Firebase](https://firebase.google.com/)
+
