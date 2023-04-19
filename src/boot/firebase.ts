@@ -5,7 +5,7 @@ import { getAuth, GoogleAuthProvider, onAuthStateChanged } from 'firebase/auth';
 import * as firebaseui from 'firebaseui';
 import 'firebaseui/dist/firebaseui.css';
 import 'firebase/compat/auth';
-import { getFirestore, setDoc, doc } from 'firebase/firestore';
+import { getFirestore, setDoc, doc, onSnapshot } from 'firebase/firestore';
 import { getDatabase, ref, onValue } from 'firebase/database';
 import { User } from 'src/models/user';
 
@@ -52,13 +52,15 @@ export default boot(() => {
           providerId: user.providerId,
           uid: user.uid,
         };
-        userStore.user = userData; // TODO store/update user data into firestore, after its persisted
+        userStore.user = userData;
         try {
-          const docRef = await setDoc(
-            doc(firestore, 'users', user.uid),
-            userData,
-            { merge: true }
-          );
+          await setDoc(doc(firestore, 'users', user.uid), userData, {
+            merge: true,
+          });
+          onSnapshot(doc(firestore, 'users', user.uid), (doc) => {
+            console.log('Current data: ', doc.data());
+            userStore.user = doc.data() as User;
+          });
           console.log('User added/updated with ID: ', user.uid);
         } catch (e) {
           console.error('Error adding document: ', e);
