@@ -1,4 +1,3 @@
-import { useTranslationsStore } from './../stores/translations-store';
 import { useUserStore } from '../stores/user-store';
 import { boot } from 'quasar/wrappers';
 import firebase from 'firebase/compat/app';
@@ -38,9 +37,8 @@ const fbUi = new firebaseui.auth.AuthUI(fbAuth);
 const fbRealtimeDb = getDatabase();
 const firestore = getFirestore();
 
-export default boot(({ app }) => {
+export default boot(() => {
   const userStore = useUserStore();
-  const translationsStore = useTranslationsStore();
   onAuthStateChanged(
     fbAuth,
     async (user) => {
@@ -54,7 +52,7 @@ export default boot(({ app }) => {
           providerId: user.providerId,
           uid: user.uid,
         };
-        userStore.user = userData; // TODO Store/ update user data after its persisted in firestore
+        userStore.user = userData; // TODO store/update user data into firestore, after its persisted
         try {
           const docRef = await setDoc(
             doc(firestore, 'users', user.uid),
@@ -67,18 +65,36 @@ export default boot(({ app }) => {
         }
       } else {
         userStore.$reset();
-        //store.commit('BaseStoreModule/setUser', baseUserState)
       }
     },
     function (error) {
       console.log(error);
     }
   );
+
   const translations = ref(fbRealtimeDb, 'translations');
-  onValue(translations, (snapshot) => {
-    const data = snapshot.val();
-    translationsStore.translations = data;
-  });
+  onValue(
+    translations,
+    (snapshot) => {
+      const data = snapshot.val();
+      localStorage.setItem('translations', JSON.stringify(data));
+    },
+    {
+      onlyOnce: true,
+    }
+  );
+
+  const routes = ref(fbRealtimeDb, 'routes');
+  onValue(
+    routes,
+    (snapshot) => {
+      const data = snapshot.val();
+      localStorage.setItem('routes', JSON.stringify(data));
+    },
+    {
+      onlyOnce: true,
+    }
+  );
 });
 
 export { fbApp, fbUi, fbUiConfig, fbAuth, fbRealtimeDb, firestore };

@@ -2,7 +2,9 @@
   <q-layout view="hHh lpR fFf">
     <q-header elevated>
       <q-toolbar>
-        <q-btn icon="home" flat dense round aria-label="Home" to="/" />
+        <q-btn icon="home" flat dense round aria-label="Home" to="/">
+          <q-tooltip> {{ $t('menus.home') }} </q-tooltip>
+        </q-btn>
         <q-toolbar-title>
           {{ appName }}
         </q-toolbar-title>

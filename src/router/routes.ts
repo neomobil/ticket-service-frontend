@@ -1,25 +1,29 @@
 import { RouteRecordRaw } from 'vue-router';
+import { Route } from 'src/models/route';
 
-const routes: RouteRecordRaw[] = [
-  {
-    path: '/',
+const routes: RouteRecordRaw[] = [];
+for (const [key, value] of Object.entries(
+  JSON.parse(localStorage.getItem('routes') || '{}')
+)) {
+  const route = value as Route;
+  routes.push({
+    path: route.path,
     component: () => import('layouts/MainLayout.vue'),
-    meta: { isPublic: true },
-    children: [{ path: '', name: 'home', component: () => import('pages/IndexPage.vue') }],
-  },
-  {
-    path: '/login',
-    component: () => import('layouts/MainLayout.vue'),
-    meta: { isPublic: true },
-    children: [{ path: '', name: 'login', component: () => import('pages/LoginPage.vue') }],
-  },
+    meta: { isPublic: route.isPublic },
+    children: [
+      {
+        path: '',
+        name: key,
+        component: () => import(`../pages/${route.component}.vue`),
+      },
+    ],
+  });
+}
 
-  // Always leave this as last one,
-  // but you can also remove it
-  {
-    path: '/:catchAll(.*)*',
-    component: () => import('pages/ErrorNotFound.vue'),
-  },
-];
-
+// Always leave this as last one,
+// but you can also remove it
+routes.push({
+  path: '/:catchAll(.*)*',
+  component: () => import('pages/ErrorNotFound.vue'),
+});
 export default routes;

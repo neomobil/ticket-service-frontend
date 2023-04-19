@@ -1,5 +1,6 @@
-import enUS from './en-US';
+const messages = JSON.parse(localStorage.getItem('translations') || '{}');
 
 export default {
-  'en-US': enUS
+  en: messages.en,
+  de: messages.de,
 };
